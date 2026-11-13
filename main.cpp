@@ -105,7 +105,7 @@ struct Simd<int> {
 };
 
 
-//операции
+//операции арифметические
 template <typename T>
 struct Plus {
     using reg = typename Simd<T>::reg;
@@ -134,7 +134,7 @@ struct Divide {
     reg simd_op(reg a, reg b) { return Simd<T>::div(a, b); }
 };
 
-//SiLU(x) = x/(1+ exp(-x))
+//SiLU(x)= x/ (1+exp(-x))
 template <typename T>
 struct SiLU {
     using reg = typename Simd<T>::reg;
@@ -146,8 +146,8 @@ struct SiLU {
     }
 };
 
-//GELU(x) = 0.5*x * (1+ tanh(sqrt(2/pi) *(x + 0.044715 * x^3)))
-//в simd версии tanh(u) считаем как 1 -2/(exp(2u) +1)
+//GELU(x)= 0.5*x* (1+ tanh(sqrt(2/pi) *(x + 0.044715 * x^3)))
+//в simd версии tanh(u) считаем как 1-2/ (exp(2u)+1)
 template <typename T>
 struct GELU {
     using reg = typename Simd<T>::reg;
@@ -273,7 +273,7 @@ double mean_simd(const std::vector<T>& a) {
 }
 
 
-//умножение квадратных матриц n x n, хранятся по строкам
+//умножение квадратных матриц n x n
 //порядок циклов i-k-j, чтобы по b и c шли подряд по памяти
 template <typename T>
 void matmul_scalar(const std::vector<T>& a, const std::vector<T>& b, std::vector<T>& c, int n) {
@@ -314,7 +314,7 @@ void matmul_simd(const std::vector<T>& a, const std::vector<T>& b, std::vector<T
 }
 
 
-//заполнение случайными числами; для float/double значения дробные, для int целые
+//заполнение случайными числами
 template <typename T>
 void fill_random(std::vector<T>& v, bool no_zeros) {
     for (size_t i = 0; i < v.size(); i++) {
@@ -410,7 +410,7 @@ void test_activations(const char* type_name) {
 //нагрузочные тесты
 template <typename F>
 double measure(F func, long repeats) {
-    func(); //прогрев
+    func(); 
     double start = omp_get_wtime();
     for (long r = 0; r < repeats; r++) {
         func();
@@ -418,7 +418,7 @@ double measure(F func, long repeats) {
     return (omp_get_wtime() - start) / repeats;
 }
 
-//чтобы маленькие размеры не мерились один раз, а большие не считались вечность
+//чтобы маленькие размеры не мерились один раз && большие не считались вечность
 long repeats_for(long work) {
     long r = 20000000 / work;
     if (r < 3) {
@@ -464,7 +464,7 @@ void bench_basic(const char* type_name) {
         bench_binary(type_name, "divide", a, b, res, Divide<T>());
 
         long repeats = repeats_for(size);
-        T keep = 0; //результат сохраняем, чтобы компилятор не выкинул вызов
+        T keep = 0;         //результат сохраняем, чтобы компилятор не выкинул вызов
         double t_scalar = measure([&]() { keep += sum_scalar(a); }, repeats);
         double t_simd = measure([&]() { keep += sum_simd(a); }, repeats);
         print_line(type_name, "sum", size, t_scalar, t_simd);
@@ -498,7 +498,7 @@ void bench_activations(const char* type_name) {
 
 
 int main() {
-    //на время тестов пороги не учитываем, иначе маленькие тестовые массивы не попадут в параллельную ветку
+    //на время тестов пороги не учитываем. иначе маленькие тестовые массивы не попадут в параллельную ветку
     long saved_arith = threshold_arith;
     long saved_sum = threshold_sum;
     long saved_activation = threshold_activation;
